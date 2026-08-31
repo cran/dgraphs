@@ -1,12 +1,4 @@
-#' Produce k-NN Distance and Index Matrices from a Distance Matrix
-#'
-#' @param d Symmetric distance matrix.
-#' @param k Number of nearest neighbors to return per row.
-#'
-#' @return A list with `nn.i` and `nn.d` matrices.
-#'
-#' @export
-dist.to.knn <- function(d, k) {
+.dist.to.knn <- function(d, k) {
     stopifnot(isSymmetric(d))
 
     n <- nrow(d)
@@ -30,6 +22,10 @@ dist.to.knn <- function(d, k) {
 #'
 #' @return Numeric vector of cumulative path distances normalized to end at 1.
 #'
+#' @examples
+#' vertices <- rbind(c(0, 0), c(1, 0), c(1, 2))
+#' path.dist(1:3, vertices)
+#'
 #' @export
 path.dist <- function(s, V, edge.col = "gray") {
     n <- length(s)
@@ -47,6 +43,9 @@ path.dist <- function(s, V, edge.col = "gray") {
 #'
 #' @return Total Euclidean length of the path.
 #'
+#' @examples
+#' path.length(rbind(c(0, 0), c(1, 0), c(1, 2)))
+#'
 #' @export
 path.length <- function(X) {
     stopifnot(is.numeric(X))
@@ -61,15 +60,7 @@ path.length <- function(X) {
     path.len
 }
 
-#' Euclidean Distance Between Two Points
-#'
-#' @param p1 First numeric point.
-#' @param p2 Second numeric point.
-#'
-#' @return Euclidean distance between `p1` and `p2`.
-#'
-#' @export
-euclidean.distance <- function(p1, p2) {
+.point.euclidean.distance <- function(p1, p2) {
     sqrt(sum((p1 - p2)^2))
 }
 
@@ -80,12 +71,16 @@ euclidean.distance <- function(p1, p2) {
 #'
 #' @return Matrix of subdivided path coordinates.
 #'
+#' @examples
+#' path <- rbind(c(0, 0), c(1, 0), c(1, 2))
+#' subdivide.path(path, n.subdivision.pts = 5)
+#'
 #' @export
 subdivide.path <- function(path, n.subdivision.pts) {
     n.pts <- dim(path)[1]
     edge.lengths <- sapply(
         seq(n.pts - 1),
-        function(i) euclidean.distance(path[i, ], path[i + 1, ])
+        function(i) .point.euclidean.distance(path[i, ], path[i + 1, ])
     )
     total.length <- sum(edge.lengths)
     subdiv.dist <- total.length / (n.subdivision.pts - 1)
@@ -133,6 +128,10 @@ subdivide.path <- function(path, n.subdivision.pts) {
 #'
 #' @return A list with `nn.index` and `nn.dist` matrices.
 #'
+#' @examples
+#' X <- cbind(seq(0, 1, length.out = 8), 0)
+#' geodesic.knn(X, k = 2, K = 3)
+#'
 #' @export
 geodesic.knn <- function(X, k, K = 5, G = NULL) {
     if (!is.matrix(X)) {
@@ -149,7 +148,7 @@ geodesic.knn <- function(X, k, K = 5, G = NULL) {
     }
     stopifnot(k > 0)
     d <- estimate.geodesic.distances(X, K, G)
-    r <- dist.to.knn(d, k)
+    r <- .dist.to.knn(d, k)
     list(nn.index = r$nn.i, nn.dist = r$nn.d)
 }
 
@@ -161,6 +160,10 @@ geodesic.knn <- function(X, k, K = 5, G = NULL) {
 #' @param method Graph construction method, `"knn.graph"` or `"mst"`.
 #'
 #' @return Numeric matrix of graph shortest-path distances.
+#'
+#' @examples
+#' points <- cbind(seq(0, 1, length.out = 8), 0)
+#' estimate.geodesic.distances(points, k = 2)
 #'
 #' @export
 estimate.geodesic.distances <- function(points,
@@ -271,6 +274,11 @@ estimate.geodesic.distances <- function(points,
 #'
 #' @return A list with graph vertices, graph edges, `nn.index`, and `nn.dist`.
 #'
+#' @examples
+#' X.grid <- as.matrix(expand.grid(x = 0:2, y = 0:2))
+#' X <- rbind(c(0.2, 0.2), c(1.2, 0.8), c(1.8, 1.7))
+#' geodesic.knnx(X, X.grid, k = 2)
+#'
 #' @export
 geodesic.knnx <- function(X, X.grid, k, method = "knn.graph", K = 5) {
     if (!is.matrix(X)) {
@@ -309,7 +317,7 @@ geodesic.knnx <- function(X, X.grid, k, method = "knn.graph", K = 5) {
     }
     V <- rbind(X.grid, X)
     E <- rbind(E.grid, E)
-    A <- graph.adj.mat(V, E)
+    A <- .graph.adj.mat(V, E)
     G <- igraph::graph_from_adjacency_matrix(A, mode = "undirected", weighted = TRUE)
     d <- igraph::distances(G)
     dd <- as.numeric(d)
@@ -345,6 +353,15 @@ geodesic.knnx <- function(X, X.grid, k, method = "knn.graph", K = 5) {
 #' @param verbose Print backend progress.
 #'
 #' @return A `geodesic_core_endpoints` list of endpoints and diagnostics.
+#'
+#' @examples
+#' graph <- create.chain.graph(n.vertices = 8)
+#' endpoints <- geodesic.core.endpoints(
+#'   graph$adj.list,
+#'   graph$edge.lengths,
+#'   use.approx.eccentricity = FALSE
+#' )
+#' endpoints$endpoints
 #'
 #' @export
 geodesic.core.endpoints <- function(adj.list,
@@ -447,6 +464,12 @@ geodesic.core.endpoints <- function(adj.list,
 #'
 #' @return Data frame describing path availability and length by hop limit.
 #'
+#' @examples
+#' graph <- list(2L, c(1L, 3L), 2L)
+#' lengths <- list(1, c(1, 2), 2)
+#' series <- create.path.graph.series(graph, lengths, h.values = 1:2)
+#' compare.paths(series, from = 1, to = 3)
+#'
 #' @export
 compare.paths <- function(x, from, to) {
     if (!inherits(x, "path.graph.series")) {
@@ -488,6 +511,12 @@ compare.paths <- function(x, from, to) {
 #'
 #' @return Minimum hop limit where the path exists, or `NULL`.
 #'
+#' @examples
+#' graph <- list(2L, c(1L, 3L), 2L)
+#' lengths <- list(1, c(1, 2), 2)
+#' series <- create.path.graph.series(graph, lengths, h.values = 1:2)
+#' minh.limit(series, from = 1, to = 3)
+#'
 #' @export
 minh.limit <- function(x, from, to) {
     if (!inherits(x, "path.graph.series")) {
@@ -510,6 +539,11 @@ minh.limit <- function(x, from, to) {
 #' @param h Odd positive integer maximum path length in hops.
 #'
 #' @return An object of class `path.graph.plm`.
+#'
+#' @examples
+#' graph <- list(2L, c(1L, 3L), 2L)
+#' lengths <- list(1, c(1, 2), 2)
+#' create.plm.graph(graph, lengths, h = 3)
 #'
 #' @export
 create.plm.graph <- function(graph, edge.lengths, h) {

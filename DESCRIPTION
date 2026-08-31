@@ -1,8 +1,8 @@
 Package: dgraphs
 Title: Data-Derived Graph Construction Utilities
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
-    person("Peter", "Gajer", role = c("aut", "cre"),
+    person("Pawel", "Gajer", role = c("aut", "cre"),
            email = "pgajer@gmail.com"),
     person("Sunil", "Arya", role = "ctb",
            comment = "ANN library"),
@@ -38,14 +38,15 @@ Encoding: UTF-8
 Language: en-US
 SystemRequirements: C++17
 Depends: R (>= 4.1.0)
-Imports: FNN, igraph (>= 2.2.0), parallel
+Imports: FNN, igraph (>= 2.2.0), parallel, Rcpp
 LinkingTo: Rcpp, RcppEigen
-Suggests: Matrix, testthat (>= 3.0.0)
+Suggests: knitr, Matrix, rmarkdown, testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
 NeedsCompilation: yes
-Packaged: 2026-08-06 07:57:36 UTC; pgajer
-Author: Peter Gajer [aut, cre],
+Packaged: 2026-08-31 21:42:14 UTC; pgajer
+Author: Pawel Gajer [aut, cre],
   Sunil Arya [ctb] (ANN library),
   David M. Mount [ctb] (ANN library),
   University of Maryland [cph] (ANN library),
@@ -54,6 +55,6 @@ Author: Peter Gajer [aut, cre],
   Gael Guennebaud [ctb, cph] (Spectra linear algebra routines),
   Jitse Niesen [ctb, cph] (Spectra linear algebra routines),
   Netherlands eScience Center [ctb, cph] (Spectra eigensolver routines)
-Maintainer: Peter Gajer <pgajer@gmail.com>
+Maintainer: Pawel Gajer <pgajer@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-08-20 17:00:11 UTC
+Date/Publication: 2026-08-31 23:10:10 UTC

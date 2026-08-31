@@ -1,13 +1,13 @@
 test_that("DG6c path distance helpers run self-hosted", {
     d <- matrix(c(0, 1, 4, 1, 0, 2, 4, 2, 0), nrow = 3, byrow = TRUE)
-    knn <- dgraphs::dist.to.knn(d, k = 2)
+    knn <- dgraphs:::.dist.to.knn(d, k = 2)
     expect_equal(knn$nn.i, matrix(c(1L, 2L, 2L, 1L, 3L, 2L), nrow = 3, byrow = TRUE))
     expect_equal(knn$nn.d, matrix(c(0, 1, 0, 1, 0, 2), nrow = 3, byrow = TRUE))
 
     V <- matrix(c(0, 0, 1, 0, 1, 1, 2, 1), ncol = 2, byrow = TRUE)
     expect_equal(dgraphs::path.dist(c(1L, 2L, 3L, 4L), V), c(0, 1 / 3, 2 / 3, 1))
     expect_equal(dgraphs::path.length(V), 3)
-    expect_equal(dgraphs::euclidean.distance(c(0, 0), c(3, 4)), 5)
+    expect_equal(dgraphs:::.point.euclidean.distance(c(0, 0), c(3, 4)), 5)
 
     subdivided <- dgraphs::subdivide.path(V, n.subdivision.pts = 6)
     expect_equal(dim(subdivided), c(6L, 2L))
@@ -128,4 +128,20 @@ test_that("DG6c graph core endpoints run self-hosted", {
     expect_equal(endpoints$core.vertices, c(1L, 2L))
     expect_equal(endpoints$distance.to.core, c(0, 0, 2, 3))
     expect_false(endpoints$used.approx.eccentricity)
+})
+
+test_that("DG6c single-vertex geodesic statistics use R vertex indices", {
+    graph <- dgraphs::generate.circle.graph(8, type = "uniform")
+    result <- dgraphs::compute.vertex.geodesic.stats(
+        graph$adj.list,
+        graph$weight.list,
+        grid.vertex = 1,
+        min.radius = 0.3,
+        max.radius = 0.5,
+        n.steps = 2
+    )
+
+    expect_s3_class(result, "vertex_geodesic_stats")
+    expect_identical(attr(result, "vertex"), 1L)
+    expect_equal(nrow(result), 2L)
 })

@@ -116,14 +116,15 @@ test_that("DG1 graph utilities run without native gflow calls", {
 
     X <- matrix(c(0, 0, 1, 0, 1, 1), ncol = 2, byrow = TRUE)
     E <- matrix(c(1, 2, 2, 3), ncol = 2, byrow = TRUE)
-    A <- graph.adj.mat(X, E)
+    A <- dgraphs:::.graph.adj.mat(X, E)
     expect_equal(A[1, 2], 1)
     expect_equal(A[2, 3], 1)
     expect_equal(A[1, 3], 0)
 
-    ig <- adjlist.to.igraph(adj)
+    ig <- as_igraph(adj, weight.list = weights)
     expect_equal(igraph::vcount(ig), 5)
     expect_equal(igraph::ecount(ig), 3)
+    expect_equal(igraph::E(ig)$weight, c(1, 2, 3))
 
     diam <- compute.graph.diameter(adj, weights)
     expect_equal(diam$diameter, 6)
@@ -165,6 +166,43 @@ test_that("DG2 graph geodesic distances use lifecycle payloads", {
     expect_true(any(!is.finite(graph.geodesic.distances(g, stage = "raw"))))
     expect_equal(graph.geodesic.distances(g, vertices = c(1, 3)),
                  matrix(c(0, 3, 3, 0), nrow = 2, byrow = TRUE))
+})
+
+test_that("as_igraph converts current lifecycle and legacy basin graphs", {
+    X <- rbind(c(0, 0), c(1, 0), c(2, 0), c(10, 0))
+    current <- create.mknn.graph(
+        X,
+        k = 2,
+        connect.components = TRUE
+    )
+    current.igraph <- as_igraph(current)
+    expect_s3_class(current.igraph, "igraph")
+    expect_equal(igraph::vcount(current.igraph), nrow(X))
+    expect_equal(igraph::ecount(current.igraph), current$n_edges)
+    expect_true("weight" %in% igraph::edge_attr_names(current.igraph))
+
+    legacy <- list(
+        adjacency.list = list(2L, 1L, integer(0)),
+        weight.list = list(1, 1, numeric(0)),
+        intersection.matrix = matrix(
+            c(0, 3, 0, 3, 0, 0, 0, 0, 0),
+            nrow = 3,
+            byrow = TRUE
+        ),
+        basin.metadata = data.frame(
+            label = c("a", "b", "isolated"),
+            type = c("maximum", "minimum", "other"),
+            size = c(2, 3, 1),
+            extremum.vertex = c(1, 2, 3),
+            extremum.value = c(4, 2, 1)
+        )
+    )
+    legacy.igraph <- as_igraph(legacy)
+    expect_equal(igraph::vcount(legacy.igraph), 3L)
+    expect_equal(igraph::ecount(legacy.igraph), 1L)
+    expect_equal(igraph::V(legacy.igraph)$name, legacy$basin.metadata$label)
+    expect_equal(igraph::E(legacy.igraph)$weight, 1)
+    expect_equal(igraph::E(legacy.igraph)$intersection.size, 3)
 })
 
 test_that("DG2 long-edge pruning and grid graph run locally", {

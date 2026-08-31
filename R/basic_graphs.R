@@ -70,6 +70,10 @@
 #'
 #' @return An adjacency list for the complete graph on `n` vertices.
 #'
+#' @examples
+#' complete <- create.complete.graph(4)
+#' complete[[1]]
+#'
 #' @export
 create.complete.graph <- function(n) {
     n <- as.integer(n)
@@ -84,6 +88,9 @@ create.complete.graph <- function(n) {
 #' @param n Integer number of vertices.
 #'
 #' @return An adjacency list for the empty graph on `n` vertices.
+#'
+#' @examples
+#' lengths(create.empty.graph(3))
 #'
 #' @export
 create.empty.graph <- function(n) {
@@ -100,6 +107,10 @@ create.empty.graph <- function(n) {
 #' @param n.cores Number of parallel workers. Use `1` for serial execution.
 #'
 #' @return A list with `adjacency.list`, `weights.list`, and `adjacency.matrix`.
+#'
+#' @examples
+#' cover <- list(c(1, 2, 3), c(3, 4), c(5, 6))
+#' nerve.graph(cover, n.cores = 1)$adjacency.list
 #'
 #' @export
 nerve.graph <- function(covering.list, n.cores = 1) {
@@ -175,6 +186,10 @@ nerve.graph <- function(covering.list, n.cores = 1) {
 #'
 #' @return An adjacency list for the complete bipartite graph.
 #'
+#' @examples
+#' graph <- create.bipartite.graph(2, 3)
+#' graph[[1]]
+#'
 #' @export
 create.bipartite.graph <- function(n1, n2) {
     n1 <- as.integer(n1)
@@ -201,6 +216,11 @@ create.bipartite.graph <- function(n1, n2) {
 #' @param i2 Vertex in `graph2` to connect.
 #'
 #' @return A joined adjacency list using 1-based vertex indices.
+#'
+#' @examples
+#' first <- list(2L, 1L)
+#' second <- list(2L, 1L)
+#' join.graphs(first, second, i1 = 2, i2 = 1)
 #'
 #' @export
 join.graphs <- function(graph1, graph2, i1, i2) {
@@ -261,6 +281,11 @@ join.graphs <- function(graph1, graph2, i1, i2) {
 #'
 #' @return A list with `adj.list`, `edge.lengths`, `x.sorted`, and `y.sorted`.
 #'
+#' @examples
+#' chain <- create.bi.kNN.chain.graph(x = c(3, 1, 2, 4), k = 1)
+#' chain$adj.list
+#' chain$x.sorted
+#'
 #' @export
 create.bi.kNN.chain.graph <- function(n.vertices = 5, k = 1, x = NULL, y = NULL) {
     if (!is.null(x)) {
@@ -318,6 +343,11 @@ create.bi.kNN.chain.graph <- function(n.vertices = 5, k = 1, x = NULL, y = NULL)
 #'
 #' @return A list with `adj.list`, `edge.lengths`, `x.sorted`, and `y.sorted`.
 #'
+#' @examples
+#' chain <- create.chain.graph(x = c(3, 1, 2))
+#' chain$adj.list
+#' chain$edge.lengths
+#'
 #' @export
 create.chain.graph <- function(n.vertices = NULL, x = NULL, y = NULL) {
     if (!is.null(x)) {
@@ -368,6 +398,9 @@ create.chain.graph <- function(n.vertices = NULL, x = NULL, y = NULL) {
 #'
 #' @return An undirected cycle graph adjacency list.
 #'
+#' @examples
+#' create.circular.graph(5)
+#'
 #' @export
 create.circular.graph <- function(n) {
     n <- as.integer(n)
@@ -390,6 +423,10 @@ create.circular.graph <- function(n) {
 #' @param sizes Positive integer chain lengths attached to the central vertex.
 #'
 #' @return An adjacency list for the star graph.
+#'
+#' @examples
+#' star <- create.star.graph(c(2, 3, 1))
+#' lengths(star)
 #'
 #' @export
 create.star.graph <- function(sizes) {
@@ -418,6 +455,11 @@ create.star.graph <- function(sizes) {
 #' @param seed Optional random seed used when `type = "random"`.
 #'
 #' @return A list with `adj.list` and `weight.list`.
+#'
+#' @examples
+#' circle <- generate.circle.graph(6, type = "uniform")
+#' circle$adj.list[[1]]
+#' circle$weight.list[[1]]
 #'
 #' @export
 generate.circle.graph <- function(n, type = "random", seed = NULL) {
@@ -460,6 +502,11 @@ generate.circle.graph <- function(n, type = "random", seed = NULL) {
 #' @param connected Logical; if `TRUE`, first build a random spanning tree.
 #'
 #' @return A list with `adj.list` and `weight.list`.
+#'
+#' @examples
+#' set.seed(1)
+#' graph <- create.random.graph(8, avg_degree = 2)
+#' sum(lengths(graph$adj.list)) / 2
 #'
 #' @export
 create.random.graph <- function(n_vertices, avg_degree, connected = TRUE) {
@@ -529,6 +576,10 @@ create.random.graph <- function(n_vertices, avg_degree, connected = TRUE) {
 #'
 #' @return Integer vector of component IDs, one per vertex.
 #'
+#' @examples
+#' graph <- list(2L, 1L, integer(0))
+#' graph.connected.components(graph)
+#'
 #' @export
 graph.connected.components <- function(adj.list) {
     adj.list <- .dgraphs.validate.adj.list(adj.list)
@@ -552,15 +603,7 @@ graph.connected.components <- function(adj.list) {
     component
 }
 
-#' Convert Coordinates and Edges to a Weighted Adjacency Matrix
-#'
-#' @param X Numeric coordinate matrix.
-#' @param E Two-column matrix of 1-based edge endpoints.
-#'
-#' @return Symmetric weighted adjacency matrix with Euclidean edge lengths.
-#'
-#' @export
-graph.adj.mat <- function(X, E) {
+.graph.adj.mat <- function(X, E) {
     if (!is.matrix(X) || !is.numeric(X) || any(!is.finite(X))) {
         stop("'X' must be a finite numeric matrix.", call. = FALSE)
     }
@@ -598,6 +641,16 @@ graph.adj.mat <- function(X, E) {
 #' @param edge.lengths Edge-length list matching `adj.list`.
 #'
 #' @return Numeric shortest-path distance.
+#'
+#' @examples
+#' graph <- list(2L, c(1L, 3L), 2L)
+#' weights <- list(1, c(1, 2), 2)
+#' compute.graph.distance(
+#'   i = 1,
+#'   j = 3,
+#'   adj.list = graph,
+#'   edge.lengths = weights
+#' )
 #'
 #' @export
 compute.graph.distance <- function(star.obj = NULL,
@@ -674,6 +727,10 @@ compute.graph.distance <- function(star.obj = NULL,
 #'
 #' @return A list with `edge.matrix` and `weights`.
 #'
+#' @examples
+#' graph <- list(c(2L, 3L), 1L, 1L)
+#' convert.adjacency.to.edge.matrix(graph)
+#'
 #' @export
 convert.adjacency.to.edge.matrix <- function(adj.list, weights.list = NULL) {
     .dgraphs.edge.matrix(adj.list, weights.list)
@@ -684,6 +741,10 @@ convert.adjacency.to.edge.matrix <- function(adj.list, weights.list = NULL) {
 #' @param A Numeric square adjacency matrix.
 #'
 #' @return A list with `adjacency.list` and `weights.list`.
+#'
+#' @examples
+#' A <- matrix(c(0, 1, 0, 1, 0, 2, 0, 2, 0), nrow = 3)
+#' convert.weighted.adjacency.matrix.to.adjacency.list(A)
 #'
 #' @export
 convert.weighted.adjacency.matrix.to.adjacency.list <- function(A) {
@@ -711,6 +772,11 @@ convert.weighted.adjacency.matrix.to.adjacency.list <- function(A) {
 #' @param weight.list Edge-length list matching `adj.list`.
 #'
 #' @return A list containing the diameter and the farthest path details.
+#'
+#' @examples
+#' graph <- list(2L, c(1L, 3L), 2L)
+#' weights <- list(1, c(1, 2), 2)
+#' compute.graph.diameter(graph, weights)$diameter
 #'
 #' @importFrom igraph graph_from_edgelist E diameter farthest_vertices shortest_paths make_empty_graph
 #' @export
@@ -741,39 +807,4 @@ compute.graph.diameter <- function(adj.list, weight.list) {
         farthest_vertices = farthest,
         diameter_path = path
     )
-}
-
-#' Convert an Adjacency List to igraph
-#'
-#' @param adj.list A 1-based adjacency list.
-#'
-#' @return An undirected `igraph` graph.
-#'
-#' @importFrom igraph graph_from_edgelist make_empty_graph add_vertices
-#' @export
-adjlist.to.igraph <- function(adj.list) {
-    if (!requireNamespace("igraph", quietly = TRUE)) {
-        stop("Package 'igraph' is required.", call. = FALSE)
-    }
-    adj.list <- .dgraphs.validate.adj.list(adj.list)
-    n <- length(adj.list)
-    edges <- vector("list", n)
-    for (v in seq_len(n)) {
-        w <- adj.list[[v]]
-        w <- w[w > v]
-        if (length(w) > 0L) {
-            edges[[v]] <- cbind(v, w)
-        }
-    }
-    ed <- do.call(rbind, edges)
-    if (is.null(ed) || nrow(ed) == 0L) {
-        g <- igraph::make_empty_graph(n = n, directed = FALSE)
-    } else {
-        storage.mode(ed) <- "integer"
-        g <- igraph::graph_from_edgelist(ed, directed = FALSE)
-        if (igraph::vcount(g) < n) {
-            g <- igraph::add_vertices(g, n - igraph::vcount(g))
-        }
-    }
-    g
 }
